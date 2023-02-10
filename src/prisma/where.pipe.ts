@@ -1,29 +1,50 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import parseObjectLiteral from '../helpers/parse-object-literal';
+import { Pipes } from '../../index';
 
 const parseValue = (ruleValue: string) => {
   if (ruleValue.endsWith(')')) {
-    if (ruleValue.startsWith('int(')) { // @ts-ignore
-      return parseInt(/\(([^)]+)\)/.exec(ruleValue)[1], 10);
+    if (ruleValue.startsWith('int(')) {
+      const arr = /\(([^)]+)\)/.exec(ruleValue);
+
+      if (arr && arr[1]) {
+        return parseInt(arr[1], 10);
+      }
     }
 
     if (
       ruleValue.startsWith('date(') || ruleValue.startsWith('datetime(')
-    ) { // @ts-ignore
-      return new Date(/\(([^)]+)\)/.exec(ruleValue)[1]).toISOString();
+    ) {
+      const arr = /\(([^)]+)\)/.exec(ruleValue);
+
+      if (arr && arr[1]) {
+        return new Date(arr[1]).toISOString();
+      }
     }
 
-    if (ruleValue.startsWith('float(')) { // @ts-ignore
-      return parseFloat(/\(([^)]+)\)/.exec(ruleValue)[1]);
+    if (ruleValue.startsWith('float(')) {
+      const arr = /\(([^)]+)\)/.exec(ruleValue);
+
+      if (arr && arr[1]) {
+        return parseFloat(arr[1]);
+      }
     }
 
-    if (ruleValue.startsWith('string(')) { // @ts-ignore
-      return /\(([^)]+)\)/.exec(ruleValue)[1];
+    if (ruleValue.startsWith('string(')) {
+      const arr = /\(([^)]+)\)/.exec(ruleValue);
+
+      if (arr && arr[1]) {
+        return arr[1];
+      }
     }
     if (
       ruleValue.startsWith('boolean(') || ruleValue.startsWith('bool(')
-    ) { // @ts-ignore
-      return /\(([^)]+)\)/.exec(ruleValue)[1] === 'true';
+    ) {
+      const arr = /\(([^)]+)\)/.exec(ruleValue);
+
+      if (arr && arr[1]) {
+        return arr[1] === 'true';
+      }
     }
   }
 
@@ -35,7 +56,7 @@ const parseValue = (ruleValue: string) => {
  * */
 @Injectable()
 export default class WherePipe implements PipeTransform {
-  transform(value: string): Record<string, any> | undefined {
+  transform(value: string): Pipes.Where | undefined {
     if (value == null) return undefined;
     try {
       const rules = parseObjectLiteral(value);

@@ -1,8 +1,8 @@
 {
-  "name": "nestjs-pipes",
-  "version": "1.0.0",
+  "name": "@nodeteam/nestjs-pipes",
+  "version": "1.0.7",
   "description": "Pipes collection for Nest.JS app",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
