@@ -43,21 +43,21 @@ https://example.com/?sortBy=firstName:asc
 
 **not** - `where=age: not int(12)`
 
-**contains** - `where=firstName: contains string('John')` || `where=firstName: contains John`
+**contains** - `where=firstName: contains string(John)` or `where=firstName: contains John`
 
-**startsWith** - `where=firstName: startsWith string('John')` || `where=firstName: startsWith John`
+**startsWith** - `where=firstName: startsWith string(John)` or `where=firstName: startsWith John`
 
-**endsWith** - `where=firstName: endsWith string('John')` || `where=firstName: endsWith John`
+**endsWith** - `where=firstName: endsWith string(John)` or `where=firstName: endsWith John`
 
-**every** - `where=firstName: every string('John')` || `where=firstName: every John`
+**every** - `where=firstName: every string(John)` or `where=firstName: every John`
 
-**some** - `where=firstName: some string('John')` || `where=firstName: some John`
+**some** - `where=firstName: some string(John)` or `where=firstName: some John`
 
-**none** - `where=firstName: none string('John')` || `where=firstName: none John`
+**none** - `where=firstName: none string(John)` or `where=firstName: none John`
 
 ## Where types realized:
 
-**string** - `where=firstName: contains string('John')`
+**string** - `where=firstName: contains string(John)`
 
 **int** - `where=age: gt int(12)`
 

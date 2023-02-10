@@ -89,7 +89,8 @@ export default class WherePipe implements PipeTransform {
               typeof data[val] === 'string'
               && data[val].includes(':')
               && !data[val].endsWith(':')
-              && !data[val].endsWith('Z')
+              // is Date
+              && !/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)((-(\d{2}):(\d{2})|Z)?)/.test(data[val])
             ) {
               const record: Record<string, any> = {};
 
