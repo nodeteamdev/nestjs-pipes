@@ -1,3 +1,4 @@
 import WherePipe from './prisma/where.pipe';
 import OrderByPipe from './prisma/order-by.pipe';
-export { WherePipe, OrderByPipe, };
+import SelectPipe from './prisma/select.pipe';
+export { WherePipe, OrderByPipe, SelectPipe, };

@@ -76,7 +76,7 @@ let WherePipe = class WherePipe {
                         if (typeof data[val] === 'string'
                             && data[val].includes(':')
                             && !data[val].endsWith(':')
-                            && !data[val].endsWith('Z')) {
+                            && !/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)((-(\d{2}):(\d{2})|Z)?)/.test(data[val])) {
                             const record = {};
                             record[data[val].split(':')[0].trim()] = data[val]
                                 .split(':')[1]

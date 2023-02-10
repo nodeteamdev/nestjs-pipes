@@ -105,3 +105,22 @@ https://example.com/?where=id: gt int(1), email: contains @gmail.com
 ```
 https://example.com/?where=firstName:John&sortBy=firstName:asc
 ```
+
+# #SelectPipe
+
+```typescript
+@Query('select', SelectPipe) select?: Pipes.Select
+```
+
+### Examples:
+
+* Select the columns `firstName` and `lastName`
+```
+https://example.com/?select=firstName,lastName
+```
+
+* Exclude the columns `firstName` and `lastName`
+
+```
+https://example.com/?select=-firstName,-lastName
+```
