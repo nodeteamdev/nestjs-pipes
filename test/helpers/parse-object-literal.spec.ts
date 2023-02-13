@@ -1,4 +1,4 @@
-import parseObjectLiteral from "../../src/helpers/parse-object-literal";
+import parseObjectLiteral from '../../src/helpers/parse-object-literal';
 
 describe('parseObjectLiteral', () => {
   it('should parse a string like "a: 1, b: 2" to [["a", "1"], ["b", "2"]]', () => {
