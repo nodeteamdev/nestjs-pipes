@@ -8,9 +8,9 @@ npm install --save @nodeteam/nestjs-pipes
 
 ```typescript
 // import pipes
-import { WherePipe, OrderByPipe } from '@nodeteam/nestjs-pipes';
+import { WherePipe, OrderByPipe } from "@nodeteam/nestjs-pipes";
 // import types
-import { Pipes } from '@nodeteam/nestjs-pipes/index';
+import { Pipes } from "@nodeteam/nestjs-pipes/index";
 ```
 
 # #OrderByPipe
@@ -21,11 +21,11 @@ import { Pipes } from '@nodeteam/nestjs-pipes/index';
 
 ### Examples:
 
-* Sort the rows by the column `firstName` in ascending order
+- Sort the rows by the column `firstName` in ascending order
+
 ```
 https://example.com/?sortBy=firstName:asc
 ```
-
 
 # #WherePipe
 
@@ -55,6 +55,8 @@ https://example.com/?sortBy=firstName:asc
 
 **none** - `where=firstName: none string(John)` or `where=firstName: none John`
 
+**in** - `where=id: in array(int(1), int(2))` or `firstName: in array(John)`
+
 ## Where types realized:
 
 **string** - `where=firstName: contains string(John)`
@@ -77,22 +79,26 @@ https://example.com/?sortBy=firstName:asc
 
 ### Examples:
 
-* Select all the rows where the column `firstName` is equal to `John`
+- Select all the rows where the column `firstName` is equal to `John`
+
 ```
 https://example.com/?where=firstName:John
 ```
 
-* Select all the rows where createdAt is greater than 2023-01-13 12:04:27.689
+- Select all the rows where createdAt is greater than 2023-01-13 12:04:27.689
+
 ```
 https://example.com/?where=createdAt: gt date(2023-01-13 12:04:27.689)
 ```
 
-* Select all rows where id is not equal to 1
+- Select all rows where id is not equal to 1
+
 ```
 https://example.com/?where=id: not int(12)
 ```
 
-* Select all rows where id is greater than 1 and email contains `@gmail.com`
+- Select all rows where id is greater than 1 and email contains `@gmail.com`
+
 ```
 https://example.com/?where=id: gt int(1), email: contains @gmail.com
 ```
@@ -101,7 +107,8 @@ https://example.com/?where=id: gt int(1), email: contains @gmail.com
 
 ### Examples:
 
-* Select all the rows where the column `firstName` is equal to `John` and sort the rows by the column `firstName` in ascending order
+- Select all the rows where the column `firstName` is equal to `John` and sort the rows by the column `firstName` in ascending order
+
 ```
 https://example.com/?where=firstName:John&sortBy=firstName:asc
 ```
@@ -114,12 +121,13 @@ https://example.com/?where=firstName:John&sortBy=firstName:asc
 
 ### Examples:
 
-* Select the columns `firstName` and `lastName`
+- Select the columns `firstName` and `lastName`
+
 ```
 https://example.com/?select=firstName,lastName
 ```
 
-* Exclude the columns `firstName` and `lastName`
+- Exclude the columns `firstName` and `lastName`
 
 ```
 https://example.com/?select=-firstName,-lastName

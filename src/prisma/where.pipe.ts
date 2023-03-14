@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import parseObjectLiteral from '../helpers/parse-object-literal';
 import { Pipes } from '../../index';
 
-const parseValue = (ruleValue: string) => {
+const parseStringTo = (ruleValue: string) => {
   if (ruleValue.endsWith(')')) {
     if (ruleValue.startsWith('int(')) {
       const arr = /\(([^)]+)\)/.exec(ruleValue);
@@ -50,6 +50,21 @@ const parseValue = (ruleValue: string) => {
 
   return ruleValue;
 };
+
+const parseValue = (ruleValue: string) => {
+  if (ruleValue.startsWith('array')) {
+    const validRegExec = /\(([^]+)\)/.exec(ruleValue);
+
+    if (validRegExec) {
+      return validRegExec[1]
+        .split(',')
+        .map((value) => parseStringTo(value));
+    }
+  }
+
+  return parseStringTo(ruleValue);
+};
+
 /**
  * @description Convert a string like
  * @example "id: int(1), firstName: banana" to { id: 1, firstName: "banana" }
@@ -79,6 +94,7 @@ export default class WherePipe implements PipeTransform {
           'every',
           'some',
           'none',
+          'in',
         ].forEach((val) => {
           if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
             const data: Record<string, any> = {};
