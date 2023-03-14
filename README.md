@@ -31,6 +31,10 @@ https://example.com/?sortBy=firstName:asc
 
 ## Operators realized:
 
+**in** - `where=zipCode: in array(11111, 22222)`
+
+**lt** - `where=age: lt int(12)`
+
 **lt** - `where=age: lt int(12)`
 
 **lte** - `where=age: lte int(12)`
@@ -70,6 +74,8 @@ https://example.com/?sortBy=firstName:asc
 **date** - `where=createdAt: gt date(2019-01-01)`
 
 **datetime** - `where=createdAt: gt datetime(2019-01-01 12:00:00)`
+
+**array** - `where=zipCode: in array(int(111111), int(222222))`
 
 ```typescript
 @Query('where', WherePipe) where?: Pipes.Where

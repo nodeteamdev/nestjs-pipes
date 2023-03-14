@@ -52,6 +52,16 @@ describe('WherePipe', () => {
     });
   });
 
+  it('if transform value is array should return [in: array] ', () => {
+    const string = 'zipCode: in array(int(111), int(222))';
+
+    expect(pipe.transform(string)).toEqual({
+      zipCode: {
+        in: [111, 222]
+      },
+    });
+  });
+
   it('should be defined', () => {
     expect(pipe).toBeDefined();
   });
