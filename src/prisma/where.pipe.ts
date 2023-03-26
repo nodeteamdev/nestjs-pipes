@@ -81,7 +81,9 @@ export default class WherePipe implements PipeTransform {
           'none',
         ].forEach((val) => {
           if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
-            const data: Record<string, any> = {};
+            const data: Record<string, any> = {
+              mode: 'insensitive',
+            };
 
             data[val] = parseValue(ruleValue.replace(`${val} `, ''));
 
