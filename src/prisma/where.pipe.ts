@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import parseObjectLiteral from '../helpers/parse-object-literal';
 import { Pipes } from '../../index';
 
-const parseValue = (ruleValue: string) => {
+const parseStringTo = (ruleValue: string) => {
   if (ruleValue.endsWith(')')) {
     if (ruleValue.startsWith('int(')) {
       const arr = /\(([^)]+)\)/.exec(ruleValue);
@@ -51,6 +51,20 @@ const parseValue = (ruleValue: string) => {
   return ruleValue;
 };
 
+const parseValue = (ruleValue: string) => {
+  if (ruleValue.startsWith('array(')) {
+    const validRegExec = /\(([^]+)\)/.exec(ruleValue);
+
+    if (validRegExec) {
+      return validRegExec[1]
+        .split(',')
+        .map((value) => parseStringTo(value));
+    }
+  }
+
+  return parseStringTo(ruleValue);
+};
+
 const extraRuleArgs = (rule: string, data: Record<string, any>): Record<string, any> => {
   if (
     ['contains', 'startsWith', 'endsWith'].some((value) => value === rule)
@@ -62,7 +76,7 @@ const extraRuleArgs = (rule: string, data: Record<string, any>): Record<string, 
   }
 
   return data;
-};
+}
 
 /**
  * @description Convert a string like
@@ -93,6 +107,7 @@ export default class WherePipe implements PipeTransform {
           'every',
           'some',
           'none',
+          'in'
         ].forEach((val) => {
           if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
             const data: Record<string, any> = {};
