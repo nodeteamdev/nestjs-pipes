@@ -50,6 +50,20 @@ const parseValue = (ruleValue: string) => {
 
   return ruleValue;
 };
+
+const extraRuleArgs = (rule: string, data: Record<string, any>): Record<string, any> => {
+  if (
+    ['contains', 'startsWith', 'endsWith'].some((value) => value === rule)
+  ) {
+    return {
+      ...data,
+      mode: 'insensitive',
+    };
+  }
+
+  return data;
+};
+
 /**
  * @description Convert a string like
  * @example "id: int(1), firstName: banana" to { id: 1, firstName: "banana" }
@@ -81,9 +95,7 @@ export default class WherePipe implements PipeTransform {
           'none',
         ].forEach((val) => {
           if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
-            const data: Record<string, any> = {
-              mode: 'insensitive',
-            };
+            const data: Record<string, any> = {};
 
             data[val] = parseValue(ruleValue.replace(`${val} `, ''));
 
@@ -102,7 +114,8 @@ export default class WherePipe implements PipeTransform {
               data[val] = record;
             }
 
-            items[ruleKey] = data;
+            const updatedData = extraRuleArgs(val, data);
+            items[ruleKey] = updatedData;
           }
         });
 
