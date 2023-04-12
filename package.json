@@ -1,8 +1,8 @@
 {
   "name": "@nodeteam/nestjs-pipes",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Pipes collection for Nest.JS app",
-  "main": "./dist/index.js",
+  "main": "./dist/src/index.js",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch"

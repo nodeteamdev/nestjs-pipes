@@ -11,7 +11,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("@nestjs/common");
 const parse_object_literal_1 = __importDefault(require("../helpers/parse-object-literal"));
-const parseValue = (ruleValue) => {
+const parseStringTo = (ruleValue) => {
     if (ruleValue.endsWith(')')) {
         if (ruleValue.startsWith('int(')) {
             const arr = /\(([^)]+)\)/.exec(ruleValue);
@@ -46,6 +46,17 @@ const parseValue = (ruleValue) => {
     }
     return ruleValue;
 };
+const parseValue = (ruleValue) => {
+    if (ruleValue.startsWith('array(')) {
+        const validRegExec = /\(([^]+)\)/.exec(ruleValue);
+        if (validRegExec) {
+            return validRegExec[1]
+                .split(',')
+                .map((value) => parseStringTo(value));
+        }
+    }
+    return parseStringTo(ruleValue);
+};
 let WherePipe = class WherePipe {
     transform(value) {
         if (value == null)
@@ -69,6 +80,7 @@ let WherePipe = class WherePipe {
                     'every',
                     'some',
                     'none',
+                    'in'
                 ].forEach((val) => {
                     if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
                         const data = {};

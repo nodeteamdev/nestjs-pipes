@@ -1,16 +1,21 @@
-import {
-  BadRequestException,
-  Injectable,
-  PipeTransform,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import { Pipes } from '../../index';
 
+/**
+ * OrderByPipe is a PipeTransform class that is used to transform a string into a Pipes.Select object.
+ */
 @Injectable()
 export default class OrderByPipe implements PipeTransform {
-  transform(
-    value: string,
-  ): Pipes.Select| undefined {
-    if (value == null) return undefined;
+  /**
+   * Transforms a string into a Pipes.Select object.
+   * @param value The string to be transformed.
+   * @returns The Pipes.Select object created from the string.
+   * @throws BadRequestException if the string is null or invalid.
+   */
+  transform(value: string): Pipes.Select | undefined {
+    if (value == null) {
+      return undefined;
+    }
 
     try {
       const selectFields = value.split(',').map((val) => val.trim());
@@ -25,8 +30,9 @@ export default class OrderByPipe implements PipeTransform {
       });
 
       return select;
-    } catch (_) {
-      throw new BadRequestException();
+    } catch (error) {
+      console.error(`Error transforming string to Pipes.Select: ${error}`);
+      throw new BadRequestException('Invalid string format.');
     }
   }
 }

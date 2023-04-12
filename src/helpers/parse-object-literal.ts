@@ -3,81 +3,83 @@
  * @param objectLiteralString - String to parse
  * @source https://github.com/mbest/js-object-literal-parse
  */
-const parseObjectLiteral = (
-  objectLiteralString: string,
-): [string, string | undefined][] => {
-  const stringDouble = '"(?:[^"\\\\]|\\\\.)*"';
-  const stringSingle = "'(?:[^'\\\\]|\\\\.)*'";
-  const stringRegexp = '/(?:[^/\\\\]|\\\\.)*/w*';
-  const specials = ',"\'{}()/:[\\]';
-  const everyThingElse = `[^\\s:,/][^${specials}]*[^\\s${specials}]`;
-  const oneNotSpace = '[^\\s]';
-  const token = RegExp(
-    `${stringDouble
-    }|${
-      stringSingle
-    }|${
-      stringRegexp
-    }|${
-      everyThingElse
-    }|${
-      oneNotSpace}`,
-    'g',
-  );
-  const divisionLookBehind = /[\])"'A-Za-z0-9_$]+$/;
-  const keywordRegexLookBehind: Record<string, number> = {
-    in: 1,
-    return: 1,
-    typeof: 1,
-  };
-  let str = objectLiteralString.trim();
-  if (str.charCodeAt(0) === 123) str = str.slice(1, -1);
-  const result: [string, string | undefined][] = [];
-  let toks = str.match(token) as RegExpMatchArray;
-  if (!toks) return result;
-  let key: string | undefined;
-  let values = [];
-  let depth = 0;
-  toks.push(',');
-  for (let i = 0, tok: string; (tok = toks[i]); ++i) {
-    const c = tok.charCodeAt(0);
-    if (c === 44) {
-      if (depth <= 0) {
-        if (!key && values.length === 1) {
-          key = values.pop();
+const parseObjectLiteral = (objectLiteralString: string): [string, string | undefined][] => {
+  try {
+    const STRING_DOUBLE = '"(?:[^"\\\\]|\\\\.)*"';
+    const STRING_SINGLE = "'(?:[^'\\\\]|\\\\.)*'";
+    const STRING_REGEXP = '/(?:[^/\\\\]|\\\\.)*/w*';
+    const SPECIAL_CHARACTERS = ',"\'{}()/:[\\]';
+    const EVERYTHING_ELSE = `[^\\s:,/][^${SPECIAL_CHARACTERS}]*[^\\s${SPECIAL_CHARACTERS}]`;
+    const ONE_NOT_SPACE = '[^\\s]';
+    const TOKEN_REGEX = RegExp(
+      `${STRING_DOUBLE
+      }|${
+        STRING_SINGLE
+      }|${
+        STRING_REGEXP
+      }|${
+        EVERYTHING_ELSE
+      }|${
+        ONE_NOT_SPACE}`,
+      'g',
+    );
+    const DIVISION_LOOK_BEHIND = /[\])"'A-Za-z0-9_$]+$/;
+    const KEYWORD_REGEX_LOOK_BEHIND: Record<string, number> = {
+      in: 1,
+      return: 1,
+      typeof: 1,
+    };
+    let stringToParse = objectLiteralString.trim();
+    if (stringToParse.charCodeAt(0) === 123) stringToParse = stringToParse.slice(1, -1);
+    const result: [string, string | undefined][] = [];
+    let tokens = stringToParse.match(TOKEN_REGEX) as RegExpMatchArray;
+    if (!tokens) return result;
+    let key: string | undefined;
+    let values = [];
+    let depth = 0;
+    tokens.push(',');
+    for (let i = 0, token: string; (token = tokens[i]); ++i) {
+      const characterCode = token.charCodeAt(0);
+      if (characterCode === 44) {
+        if (depth <= 0) {
+          if (!key && values.length === 1) {
+            key = values.pop();
+          }
+          if (key) result.push([key, values.length ? values.join('') : undefined]);
+          key = undefined;
+          values = [];
+          depth = 0;
+          continue;
         }
-        if (key) result.push([key, values.length ? values.join('') : undefined]);
-        key = undefined;
-        values = [];
-        depth = 0;
-        continue;
+      } else if (characterCode === 58) {
+        if (!depth && !key && values.length === 1) {
+          key = values.pop();
+          continue;
+        }
+      } else if (characterCode === 47 && i && token.length > 1) {
+        const match = tokens[i - 1].match(DIVISION_LOOK_BEHIND);
+        if (match && !KEYWORD_REGEX_LOOK_BEHIND[match[0]]) {
+          stringToParse = stringToParse.substr(stringToParse.indexOf(token) + 1);
+          const result = stringToParse.match(TOKEN_REGEX);
+          if (result) tokens = result;
+          tokens.push(',');
+          i = -1;
+          token = '/';
+        }
+      } else if (characterCode === 40 || characterCode === 123 || characterCode === 91) {
+        ++depth;
+      } else if (characterCode === 41 || characterCode === 125 || characterCode === 93) {
+        --depth;
+      } else if (!key && !values.length && (characterCode === 34 || characterCode === 39)) {
+        token = token.slice(1, -1);
       }
-    } else if (c === 58) {
-      if (!depth && !key && values.length === 1) {
-        key = values.pop();
-        continue;
-      }
-    } else if (c === 47 && i && tok.length > 1) {
-      const match = toks[i - 1].match(divisionLookBehind);
-      if (match && !keywordRegexLookBehind[match[0]]) {
-        str = str.substr(str.indexOf(tok) + 1);
-        const result = str.match(token);
-        if (result) toks = result;
-        toks.push(',');
-        i = -1;
-        tok = '/';
-      }
-    } else if (c === 40 || c === 123 || c === 91) {
-      ++depth;
-    } else if (c === 41 || c === 125 || c === 93) {
-      --depth;
-    } else if (!key && !values.length && (c === 34 || c === 39)) {
-      tok = tok.slice(1, -1);
+      values.push(token);
     }
-    values.push(tok);
+    return result;
+  } catch (error) {
+    console.error('Error parsing object literal string', objectLiteralString, error);
+    return [];
   }
-
-  return result;
 };
 
 export default parseObjectLiteral;
