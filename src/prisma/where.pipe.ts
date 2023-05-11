@@ -200,21 +200,6 @@ export default class WherePipe implements PipeTransform {
 
             data[val] = parseValue(ruleValue.replace(`${val} `, ''));
 
-            if (
-              typeof data[val] === 'string'
-              && data[val].includes(':')
-              && !data[val].endsWith(':')
-              // is Date
-              && !/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)((-(\d{2}):(\d{2})|Z)?)/.test(data[val])
-            ) {
-              const record: Record<string, any> = {};
-
-              record[data[val].split(':')[0].trim()] = data[val]
-                .split(':')[1]
-                .trim();
-              data[val] = record;
-            }
-
             items[ruleKey] = data;
           }
         });
