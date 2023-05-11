@@ -11,40 +11,70 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("@nestjs/common");
 const parse_object_literal_1 = __importDefault(require("../helpers/parse-object-literal"));
-const parseStringTo = (ruleValue) => {
-    if (ruleValue.endsWith(')')) {
-        if (ruleValue.startsWith('int(')) {
-            const arr = /\(([^)]+)\)/.exec(ruleValue);
-            if (arr && arr[1]) {
-                return parseInt(arr[1], 10);
-            }
-        }
-        if (ruleValue.startsWith('date(') || ruleValue.startsWith('datetime(')) {
-            const arr = /\(([^)]+)\)/.exec(ruleValue);
-            if (arr && arr[1]) {
-                return new Date(arr[1]).toISOString();
-            }
-        }
-        if (ruleValue.startsWith('float(')) {
-            const arr = /\(([^)]+)\)/.exec(ruleValue);
-            if (arr && arr[1]) {
-                return parseFloat(arr[1]);
-            }
-        }
-        if (ruleValue.startsWith('string(')) {
-            const arr = /\(([^)]+)\)/.exec(ruleValue);
-            if (arr && arr[1]) {
-                return arr[1];
-            }
-        }
-        if (ruleValue.startsWith('boolean(') || ruleValue.startsWith('bool(')) {
-            const arr = /\(([^)]+)\)/.exec(ruleValue);
-            if (arr && arr[1]) {
-                return arr[1] === 'true';
-            }
-        }
+const parseStringToInt = (ruleValue) => {
+    if (!ruleValue.endsWith(')')) {
+        return 0;
     }
-    return ruleValue;
+    if (!ruleValue.startsWith('int(')) {
+        return 0;
+    }
+    const arr = /\(([^)]+)\)/.exec(ruleValue);
+    if (!arr || !arr[1]) {
+        return 0;
+    }
+    return parseInt(arr[1], 10);
+};
+const parseStringToDate = (ruleValue) => {
+    if (!ruleValue.endsWith(')')) {
+        return '';
+    }
+    if (!ruleValue.startsWith('date(') && !ruleValue.startsWith('datetime(')) {
+        return '';
+    }
+    const arr = /\(([^)]+)\)/.exec(ruleValue);
+    if (!arr || !arr[1]) {
+        return '';
+    }
+    return new Date(arr[1]).toISOString();
+};
+const parseStringToFloat = (ruleValue) => {
+    if (!ruleValue.endsWith(')')) {
+        return 0;
+    }
+    if (!ruleValue.startsWith('float(')) {
+        return 0;
+    }
+    const arr = /\(([^)]+)\)/.exec(ruleValue);
+    if (!arr || !arr[1]) {
+        return 0;
+    }
+    return parseFloat(arr[1]);
+};
+const parseStringToString = (ruleValue) => {
+    if (!ruleValue.endsWith(')')) {
+        return '';
+    }
+    if (!ruleValue.startsWith('string(')) {
+        return '';
+    }
+    const arr = /\(([^)]+)\)/.exec(ruleValue);
+    if (!arr || !arr[1]) {
+        return '';
+    }
+    return arr[1];
+};
+const parseStringToBoolean = (ruleValue) => {
+    if (!ruleValue.endsWith(')')) {
+        return false;
+    }
+    if (!ruleValue.startsWith('boolean(') && !ruleValue.startsWith('bool(')) {
+        return false;
+    }
+    const arr = /\(([^)]+)\)/.exec(ruleValue);
+    if (!arr || !arr[1]) {
+        return false;
+    }
+    return arr[1] === 'true';
 };
 const parseValue = (ruleValue) => {
     if (ruleValue.startsWith('array(')) {
@@ -52,10 +82,38 @@ const parseValue = (ruleValue) => {
         if (validRegExec) {
             return validRegExec[1]
                 .split(',')
-                .map((value) => parseStringTo(value));
+                .map((value) => {
+                switch (true) {
+                    case value.startsWith('int('):
+                        return parseStringToInt(value);
+                    case value.startsWith('date(') || value.startsWith('datetime('):
+                        return parseStringToDate(value);
+                    case value.startsWith('float('):
+                        return parseStringToFloat(value);
+                    case value.startsWith('string('):
+                        return parseStringToString(value);
+                    case value.startsWith('boolean(') || value.startsWith('bool('):
+                        return parseStringToBoolean(value);
+                    default:
+                        return value;
+                }
+            });
         }
     }
-    return parseStringTo(ruleValue);
+    switch (true) {
+        case ruleValue.startsWith('int('):
+            return parseStringToInt(ruleValue);
+        case ruleValue.startsWith('date(') || ruleValue.startsWith('datetime('):
+            return parseStringToDate(ruleValue);
+        case ruleValue.startsWith('float('):
+            return parseStringToFloat(ruleValue);
+        case ruleValue.startsWith('string('):
+            return parseStringToString(ruleValue);
+        case ruleValue.startsWith('boolean(') || ruleValue.startsWith('bool('):
+            return parseStringToBoolean(ruleValue);
+        default:
+            return ruleValue;
+    }
 };
 let WherePipe = class WherePipe {
     transform(value) {
@@ -85,16 +143,6 @@ let WherePipe = class WherePipe {
                     if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
                         const data = {};
                         data[val] = parseValue(ruleValue.replace(`${val} `, ''));
-                        if (typeof data[val] === 'string'
-                            && data[val].includes(':')
-                            && !data[val].endsWith(':')
-                            && !/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)((-(\d{2}):(\d{2})|Z)?)/.test(data[val])) {
-                            const record = {};
-                            record[data[val].split(':')[0].trim()] = data[val]
-                                .split(':')[1]
-                                .trim();
-                            data[val] = record;
-                        }
                         items[ruleKey] = data;
                     }
                 });
@@ -105,6 +153,7 @@ let WherePipe = class WherePipe {
             return items;
         }
         catch (error) {
+            console.error('Error parsing query string:', error);
             throw new common_1.BadRequestException('Invalid query format');
         }
     }

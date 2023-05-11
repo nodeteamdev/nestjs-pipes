@@ -16,15 +16,17 @@ let OrderByPipe = class OrderByPipe {
             const orderBy = {};
             rules.forEach((rule) => {
                 const [key, order] = rule.split(':');
-                if (!['asc', 'desc'].includes(order.toLocaleLowerCase())) {
-                    throw new common_1.BadRequestException();
+                const orderLowerCase = order.toLocaleLowerCase();
+                if (!['asc', 'desc'].includes(orderLowerCase)) {
+                    throw new common_1.BadRequestException(`Invalid order: ${orderLowerCase}`);
                 }
-                orderBy[key] = order.toLocaleLowerCase();
+                orderBy[key] = orderLowerCase;
             });
             return orderBy;
         }
-        catch (_) {
-            throw new common_1.BadRequestException();
+        catch (error) {
+            console.error(error);
+            throw new common_1.BadRequestException('Invalid orderBy query parameter');
         }
     }
 };

@@ -9,8 +9,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("@nestjs/common");
 let OrderByPipe = class OrderByPipe {
     transform(value) {
-        if (value == null)
+        if (value == null) {
             return undefined;
+        }
         try {
             const selectFields = value.split(',').map((val) => val.trim());
             const select = {};
@@ -24,8 +25,9 @@ let OrderByPipe = class OrderByPipe {
             });
             return select;
         }
-        catch (_) {
-            throw new common_1.BadRequestException();
+        catch (error) {
+            console.error(`Error transforming string to Pipes.Select: ${error}`);
+            throw new common_1.BadRequestException('Invalid string format.');
         }
     }
 };
