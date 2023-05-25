@@ -21,6 +21,15 @@ describe('Order by pipe', () => {
     });
   });
 
+  it('should convert values correctly when input contains a space before "asc" or "desc" ("name: asc, address: desc")', () => {
+    const value = 'name: asc, address: desc';
+    const result = pipe.transform(value);
+    expect(result).toEqual({
+      name: 'asc',
+      address: 'desc',
+    });
+  });
+
   it('should throw error if value is empty', () => {
     expect.assertions(1);
     const value = '';

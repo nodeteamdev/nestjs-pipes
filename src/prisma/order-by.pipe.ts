@@ -26,7 +26,7 @@ export default class OrderByPipe implements PipeTransform {
 
       rules.forEach((rule) => {
         const [key, order] = rule.split(':') as [string, 'asc' | 'desc'];
-        const orderLowerCase = order.toLocaleLowerCase();
+        const orderLowerCase = order.trim().toLocaleLowerCase();
 
         if (!['asc', 'desc'].includes(orderLowerCase)) {
           throw new BadRequestException(`Invalid order: ${orderLowerCase}`);
