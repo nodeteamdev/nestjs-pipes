@@ -16,7 +16,7 @@ let OrderByPipe = class OrderByPipe {
             const orderBy = {};
             rules.forEach((rule) => {
                 const [key, order] = rule.split(':');
-                const orderLowerCase = order.toLocaleLowerCase();
+                const orderLowerCase = order.trim().toLocaleLowerCase();
                 if (!['asc', 'desc'].includes(orderLowerCase)) {
                     throw new common_1.BadRequestException(`Invalid order: ${orderLowerCase}`);
                 }
