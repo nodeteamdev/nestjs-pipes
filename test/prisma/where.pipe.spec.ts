@@ -62,6 +62,46 @@ describe('WherePipe', () => {
     });
   });
 
+  it('should parse "has" from string "tags: has yellow"', () => {
+    const string = 'tags: has yellow';
+
+    expect(pipe.transform(string)).toEqual({
+      tags: {
+        has: "yellow",
+      },
+    });
+  });
+
+  it('should parse "hasEvery" from string "tags: hasEvery array(yellow, green)"', () => {
+    const string = 'tags: hasEvery array(yellow, green)';
+
+    expect(pipe.transform(string)).toEqual({
+      tags: {
+        hasEvery: ["yellow", "green"],
+      },
+    });
+  });
+
+  it('should parse "hasEvery" from string "numbers: hasEvery array(int(5), int(8))"', () => {
+    const string = 'numbers: hasEvery array(int(5), int(8))';
+
+    expect(pipe.transform(string)).toEqual({
+      numbers: {
+        hasEvery: [5, 8],
+      },
+    });
+  });
+
+  it('should parse "hasSome" from string "tags: hasSome array(yellow, green)"', () => {
+    const string = 'tags: hasSome array(yellow, green)';
+
+    expect(pipe.transform(string)).toEqual({
+      tags: {
+        hasSome: ["yellow", "green"],
+      },
+    });
+  });
+
   it('should be defined', () => {
     expect(pipe).toBeDefined();
   });

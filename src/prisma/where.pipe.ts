@@ -193,7 +193,10 @@ export default class WherePipe implements PipeTransform {
           'every',
           'some',
           'none',
-          'in'
+          'in',
+          'has',
+          'hasEvery',
+          'hasSome',
         ].forEach((val) => {
           if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
             const data: Record<string, any> = {};
