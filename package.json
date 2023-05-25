@@ -1,6 +1,6 @@
 {
   "name": "@nodeteam/nestjs-pipes",
-  "version": "1.2.1",
+  "version": "1.2.3",
   "description": "Pipes collection for Nest.JS app",
   "main": "./dist/src/index.js",
   "scripts": {
