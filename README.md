@@ -77,6 +77,8 @@ https://example.com/?sortBy=firstName:asc
 
 **array** - `where=zipCode: in array(int(111111), int(222222))`
 
+**nested object** - `where=profile:{ firstName: contains string(Admin) }`
+
 ```typescript
 @Query('where', WherePipe) where?: Pipes.Where
 ```
