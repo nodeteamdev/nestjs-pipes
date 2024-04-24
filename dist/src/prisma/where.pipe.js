@@ -138,12 +138,27 @@ let WherePipe = class WherePipe {
                     'every',
                     'some',
                     'none',
-                    'in'
+                    'in',
+                    'has',
+                    'hasEvery',
+                    'hasSome',
                 ].forEach((val) => {
                     if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
                         const data = {};
                         data[val] = parseValue(ruleValue.replace(`${val} `, ''));
                         items[ruleKey] = data;
+                    }
+                    if (typeof ruleValue === 'string' &&
+                        ruleValue.startsWith('{') &&
+                        rule[1].split(':')[1].split(' ')[0].startsWith(val)) {
+                        const data = {};
+                        data[val] = parseValue(ruleValue
+                            .replace(`${val} `, '')
+                            .split(':')[1]
+                            .replace('}', '')
+                            .trim());
+                        const ruleValueKey = ruleValue.split(':')[0].replace('{', '').trim();
+                        items[ruleKey] = { is: { [ruleValueKey]: data } };
                     }
                 });
                 if (ruleValue != null && ruleValue !== '') {

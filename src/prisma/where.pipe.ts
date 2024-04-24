@@ -205,6 +205,26 @@ export default class WherePipe implements PipeTransform {
 
             items[ruleKey] = data;
           }
+
+          if (
+            typeof ruleValue === 'string' &&
+            ruleValue.startsWith('{') &&
+            rule[1].split(':')[1].split(' ')[0].startsWith(val)
+          ) {
+            const data: Record<string, any> = {};
+
+            data[val] = parseValue(
+              ruleValue
+                .replace(`${val} `, '')
+                .split(':')[1]
+                .replace('}', '')
+                .trim(),
+            );
+
+            const ruleValueKey = ruleValue.split(':')[0].replace('{', '').trim();
+
+            items[ruleKey] = { is: { [ruleValueKey]: data } };
+          }
         });
 
         if (ruleValue != null && ruleValue !== '') {
