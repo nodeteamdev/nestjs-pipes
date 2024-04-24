@@ -102,6 +102,42 @@ describe('WherePipe', () => {
     });
   });
 
+  it('should parse "contains" from string "tags: contains string(123)"', () => {
+    const string = 'tags: contains string(123)';
+
+    expect(pipe.transform(string)).toEqual({
+      tags: {
+        contains: "123"
+      }
+    });
+  });
+
+  it('should parse "." from string "tags.id: contains string(123)"', () => {
+    const string = 'tags.id: contains string(123)';
+
+    expect(pipe.transform(string)).toEqual({
+      tags: {
+        id : {
+          contains: "123"
+        }
+      },
+    });
+  });
+
+  it('should parse "." from string "tags.id.name: contains string(Jhon)"', () => {
+    const string = 'tags.id.name: contains string(Jhon)';
+
+    expect(pipe.transform(string)).toEqual({
+      tags: {
+        id : {
+          name: {
+            contains: "Jhon"
+          }
+        }
+      },
+    });
+  });
+
   it('should be defined', () => {
     expect(pipe).toBeDefined();
   });
