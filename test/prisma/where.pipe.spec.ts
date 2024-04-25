@@ -102,8 +102,8 @@ describe('WherePipe', () => {
     });
   });
 
-  it('should parse nested object from string "profile:{ firstName: contains string(Admin) }"', () => {
-    const string = 'profile:{ firstName: contains string(Admin) }';
+  it('should parse nested object from string "profile.firstName: contains string(Admin)"', () => {
+    const string = 'profile.firstName: contains string(Admin)';
 
     expect(pipe.transform(string)).toEqual({
       profile: {
@@ -116,8 +116,8 @@ describe('WherePipe', () => {
     });
   });
 
-  it('should parse nested object from string "profile:{ roles: hasSome array(ADMIN) }"', () => {
-    const string = 'profile:{ roles: hasSome array(ADMIN) }';
+  it('should parse nested object from string "profile.roles: hasSome array(ADMIN)"', () => {
+    const string = 'profile.roles: hasSome array(ADMIN)';
 
     expect(pipe.transform(string)).toEqual({
       profile: {
@@ -130,8 +130,8 @@ describe('WherePipe', () => {
     });
   });
 
-  it('should parse nested object from string "data:{ isAdmin: equals boolean(true) }"', () => {
-    const string = 'data:{ isAdmin: equals boolean(true) }';
+  it('should parse nested object from string "data.isAdmin: equals boolean(true)"', () => {
+    const string = 'data.isAdmin: equals boolean(true)';
 
     expect(pipe.transform(string)).toEqual({
       data: {

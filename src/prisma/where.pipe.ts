@@ -179,6 +179,8 @@ export default class WherePipe implements PipeTransform {
       rules.forEach((rule: any) => {
         const ruleKey = rule[0];
         const ruleValue = parseValue(rule[1]);
+        const key = rule[0];
+        const keyValue = key.split('.')[0];
 
         [
           'lt',
@@ -198,7 +200,11 @@ export default class WherePipe implements PipeTransform {
           'hasEvery',
           'hasSome',
         ].forEach((val) => {
-          if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
+          if (
+            rule[1].startsWith(`${val} `) &&
+            typeof ruleValue === 'string' &&
+            !ruleKey.includes('.')
+          ) {
             const data: Record<string, any> = {};
 
             data[val] = parseValue(ruleValue.replace(`${val} `, ''));
@@ -208,26 +214,22 @@ export default class WherePipe implements PipeTransform {
 
           if (
             typeof ruleValue === 'string' &&
-            ruleValue.startsWith('{') &&
-            rule[1].split(':')[1].split(' ')[0].startsWith(val)
+            ruleKey.includes('.') &&
+            rule[1].startsWith(`${val} `)
           ) {
             const data: Record<string, any> = {};
 
-            data[val] = parseValue(
-              ruleValue
-                .replace(`${val} `, '')
-                .split(':')[1]
-                .replace('}', '')
-                .trim(),
-            );
+            data[val] = parseValue(ruleValue.replace(`${val} `, ''));
 
-            const ruleValueKey = ruleValue.split(':')[0].replace('{', '').trim();
-
-            items[ruleKey] = { is: { [ruleValueKey]: data } };
+            items[keyValue] = { is: { [ruleKey.split('.')[1]]: data } };
           }
         });
 
-        if (ruleValue != null && ruleValue !== '') {
+        if (
+          ruleValue != null &&
+          ruleValue !== '' &&
+          !ruleKey.includes('.')
+        ) {
           items[ruleKey] = items[ruleKey] || ruleValue;
         }
       });
