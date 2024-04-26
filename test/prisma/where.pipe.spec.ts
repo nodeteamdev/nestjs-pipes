@@ -117,24 +117,52 @@ describe('WherePipe', () => {
 
     expect(pipe.transform(string)).toEqual({
       tags: {
-        id : {
-          contains: "123"
+        is: {          
+          id : {
+            contains: "123"
+          }
         }
       },
     });
   });
 
-  it('should parse "." from string "tags.id.name: contains string(Jhon)"', () => {
-    const string = 'tags.id.name: contains string(Jhon)';
+  it('should parse "." from string "user.data.role: hasSome array(admin, user)"', () => {
+    const string = 'user.data.role: hasSome array(yellow, green)';
 
     expect(pipe.transform(string)).toEqual({
-      tags: {
-        id : {
-          name: {
-            contains: "Jhon"
+      user: {
+          is: {
+            data : {
+              is: {
+                role: {
+                  hasSome: ["yellow", "green"]
+                }
+              }
+            }
           }
-        }
-      },
+        },
+    });
+  });
+
+  it('should parse "." from string "user.data.account.role: contains string(Admin): contains string(Jhon)"', () => {
+    const string = 'user.data.account.role: contains string(Admin): contains string(Jhon)';
+
+    expect(pipe.transform(string)).toEqual({
+      user: {
+          is: {
+            data : {
+              is: {
+                account: {
+                  is: {
+                    role: {
+                      contains: "Admin"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
     });
   });
 
