@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import parseObjectLiteral from '../helpers/parse-object-literal';
 import { Pipes } from '../../index';
+import delimetedStringObject from '../helpers/delimeted-string-object';
 
 /**
  * @description Parse a string to an integer
@@ -174,11 +175,12 @@ export default class WherePipe implements PipeTransform {
     if (value == null) return undefined;
     try {
       const rules = parseObjectLiteral(value);
-      const items: Record<string, any> = {};
+      let items: Record<string, any> = {};
 
       rules.forEach((rule: any) => {
         const ruleKey = rule[0];
         const ruleValue = parseValue(rule[1]);
+        const data: Record<string, any> = {};
 
         [
           'lt',
@@ -198,17 +200,27 @@ export default class WherePipe implements PipeTransform {
           'hasEvery',
           'hasSome',
         ].forEach((val) => {
-          if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
-            const data: Record<string, any> = {};
+          if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {            
 
-            data[val] = parseValue(ruleValue.replace(`${val} `, ''));
+            data[val] = parseValue(ruleValue.replace(`${val} `, ''));          
 
             items[ruleKey] = data;
+
           }
-        });
+        });      
+
+        if (ruleKey.indexOf('.') !== -1){
+
+          const delimeted = delimetedStringObject(ruleKey, data)
+
+          return items = {...delimeted}
+
+        } 
 
         if (ruleValue != null && ruleValue !== '') {
-          items[ruleKey] = items[ruleKey] || ruleValue;
+        
+        return items[ruleKey] = items[ruleKey] || ruleValue;
+
         }
       });
 

@@ -11,6 +11,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("@nestjs/common");
 const parse_object_literal_1 = __importDefault(require("../helpers/parse-object-literal"));
+const delimeted_string_object_1 = __importDefault(require("../helpers/delimeted-string-object"));
 const parseStringToInt = (ruleValue) => {
     if (!ruleValue.endsWith(')')) {
         return 0;
@@ -121,10 +122,11 @@ let WherePipe = class WherePipe {
             return undefined;
         try {
             const rules = (0, parse_object_literal_1.default)(value);
-            const items = {};
+            let items = {};
             rules.forEach((rule) => {
                 const ruleKey = rule[0];
                 const ruleValue = parseValue(rule[1]);
+                const data = {};
                 [
                     'lt',
                     'lte',
@@ -138,16 +140,22 @@ let WherePipe = class WherePipe {
                     'every',
                     'some',
                     'none',
-                    'in'
+                    'in',
+                    'has',
+                    'hasEvery',
+                    'hasSome',
                 ].forEach((val) => {
                     if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
-                        const data = {};
                         data[val] = parseValue(ruleValue.replace(`${val} `, ''));
                         items[ruleKey] = data;
                     }
                 });
+                if (ruleKey.indexOf('.') !== -1) {
+                    const delimeted = (0, delimeted_string_object_1.default)(ruleKey, data);
+                    return items = { ...delimeted };
+                }
                 if (ruleValue != null && ruleValue !== '') {
-                    items[ruleKey] = items[ruleKey] || ruleValue;
+                    return items[ruleKey] = items[ruleKey] || ruleValue;
                 }
             });
             return items;

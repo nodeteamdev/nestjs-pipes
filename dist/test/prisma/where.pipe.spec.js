@@ -55,6 +55,94 @@ describe('WherePipe', () => {
             },
         });
     });
+    it('should parse "has" from string "tags: has yellow"', () => {
+        const string = 'tags: has yellow';
+        expect(pipe.transform(string)).toEqual({
+            tags: {
+                has: "yellow",
+            },
+        });
+    });
+    it('should parse "hasEvery" from string "tags: hasEvery array(yellow, green)"', () => {
+        const string = 'tags: hasEvery array(yellow, green)';
+        expect(pipe.transform(string)).toEqual({
+            tags: {
+                hasEvery: ["yellow", "green"],
+            },
+        });
+    });
+    it('should parse "hasEvery" from string "numbers: hasEvery array(int(5), int(8))"', () => {
+        const string = 'numbers: hasEvery array(int(5), int(8))';
+        expect(pipe.transform(string)).toEqual({
+            numbers: {
+                hasEvery: [5, 8],
+            },
+        });
+    });
+    it('should parse "hasSome" from string "tags: hasSome array(yellow, green)"', () => {
+        const string = 'tags: hasSome array(yellow, green)';
+        expect(pipe.transform(string)).toEqual({
+            tags: {
+                hasSome: ["yellow", "green"],
+            },
+        });
+    });
+    it('should parse "contains" from string "tags: contains string(123)"', () => {
+        const string = 'tags: contains string(123)';
+        expect(pipe.transform(string)).toEqual({
+            tags: {
+                contains: "123"
+            }
+        });
+    });
+    it('should parse "." from string "tags.id: contains string(123)"', () => {
+        const string = 'tags.id: contains string(123)';
+        expect(pipe.transform(string)).toEqual({
+            tags: {
+                is: {
+                    id: {
+                        contains: "123"
+                    }
+                }
+            },
+        });
+    });
+    it('should parse "." from string "user.data.role: hasSome array(admin, user)"', () => {
+        const string = 'user.data.role: hasSome array(yellow, green)';
+        expect(pipe.transform(string)).toEqual({
+            user: {
+                is: {
+                    data: {
+                        is: {
+                            role: {
+                                hasSome: ["yellow", "green"]
+                            }
+                        }
+                    }
+                }
+            },
+        });
+    });
+    it('should parse "." from string "user.data.account.role: contains string(Admin): contains string(Jhon)"', () => {
+        const string = 'user.data.account.role: contains string(Admin): contains string(Jhon)';
+        expect(pipe.transform(string)).toEqual({
+            user: {
+                is: {
+                    data: {
+                        is: {
+                            account: {
+                                is: {
+                                    role: {
+                                        contains: "Admin"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        });
+    });
     it('should be defined', () => {
         expect(pipe).toBeDefined();
     });
