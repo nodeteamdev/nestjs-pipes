@@ -79,6 +79,8 @@ https://example.com/?sortBy=firstName:asc
 
 **nested object** - `where=profile.firstName: contains string(Admin)`
 
+**operators** - `where=OR: [email: contains string(test@gmail.com), isVerified: equals boolean(true)], NOT: email: contains string(admin@gmail.com)`
+
 ```typescript
 @Query('where', WherePipe) where?: Pipes.Where
 ```
