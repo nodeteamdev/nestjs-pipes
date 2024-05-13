@@ -121,57 +121,84 @@ let WherePipe = class WherePipe {
             return undefined;
         try {
             const rules = (0, parse_object_literal_1.default)(value);
-            const items = {};
-            rules.forEach((rule) => {
-                const ruleKey = rule[0];
-                const ruleValue = parseValue(rule[1]);
-                const key = rule[0];
-                const keyValue = key.split('.')[0];
-                [
-                    'lt',
-                    'lte',
-                    'gt',
-                    'gte',
-                    'equals',
-                    'not',
-                    'contains',
-                    'startsWith',
-                    'endsWith',
-                    'every',
-                    'some',
-                    'none',
-                    'in',
-                    'has',
-                    'hasEvery',
-                    'hasSome',
-                ].forEach((val) => {
-                    if (rule[1].startsWith(`${val} `) &&
-                        typeof ruleValue === 'string' &&
-                        !ruleKey.includes('.')) {
-                        const data = {};
-                        data[val] = parseValue(ruleValue.replace(`${val} `, ''));
-                        items[ruleKey] = data;
-                    }
-                    if (typeof ruleValue === 'string' &&
-                        ruleKey.includes('.') &&
-                        rule[1].startsWith(`${val} `)) {
-                        const data = {};
-                        data[val] = parseValue(ruleValue.replace(`${val} `, ''));
-                        items[keyValue] = { is: { [ruleKey.split('.')[1]]: data } };
-                    }
-                });
-                if (ruleValue != null &&
-                    ruleValue !== '' &&
-                    !ruleKey.includes('.')) {
-                    items[ruleKey] = items[ruleKey] || ruleValue;
-                }
-            });
-            return items;
+            return this.buildCondition(rules);
         }
         catch (error) {
             console.error('Error parsing query string:', error);
             throw new common_1.BadRequestException('Invalid query format');
         }
+    }
+    buildCondition(rules) {
+        const condition = {};
+        const operations = this.getOperations();
+        rules.forEach(([ruleKey, ruleValueRaw]) => {
+            if (!ruleValueRaw)
+                return;
+            const ruleValue = parseValue(ruleValueRaw);
+            const key = ruleKey.toUpperCase();
+            if (key === 'OR' || key === 'AND') {
+                const subConditions = ruleValueRaw
+                    .slice(1, -1)
+                    .split(',')
+                    .map((cond) => (0, parse_object_literal_1.default)(cond.trim()))
+                    .map((subRules) => this.buildCondition(subRules));
+                condition[key] = subConditions;
+            }
+            else if (key === 'NOT') {
+                const subRules = (0, parse_object_literal_1.default)(ruleValueRaw.trim());
+                condition[key] = this.buildCondition(subRules);
+            }
+            else {
+                let operation;
+                for (const op of operations) {
+                    if (ruleValueRaw.startsWith(`${op} `)) {
+                        operation = op;
+                        break;
+                    }
+                }
+                if (operation) {
+                    const parsedValue = parseValue(ruleValueRaw.replace(`${operation} `, ''));
+                    if (ruleKey.includes('.')) {
+                        const keys = ruleKey.split('.');
+                        const parentKey = keys[0];
+                        const subKey = keys.slice(1).join('.');
+                        condition[parentKey] = condition[parentKey] || { is: {} };
+                        condition[parentKey].is[subKey] = {
+                            [operation]: parsedValue,
+                        };
+                    }
+                    else {
+                        condition[ruleKey] = {
+                            [operation]: parsedValue,
+                        };
+                    }
+                }
+                else {
+                    condition[ruleKey] = ruleValue;
+                }
+            }
+        });
+        return condition;
+    }
+    getOperations() {
+        return [
+            'lt',
+            'lte',
+            'gt',
+            'gte',
+            'equals',
+            'not',
+            'contains',
+            'startsWith',
+            'endsWith',
+            'every',
+            'some',
+            'none',
+            'in',
+            'has',
+            'hasEvery',
+            'hasSome',
+        ];
     }
 };
 WherePipe = __decorate([

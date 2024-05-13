@@ -172,72 +172,96 @@ const parseValue = (ruleValue: string): string | number | boolean | object => {
 export default class WherePipe implements PipeTransform {
   transform(value: string): Pipes.Where | undefined {
     if (value == null) return undefined;
+
     try {
       const rules = parseObjectLiteral(value);
-      const items: Record<string, any> = {};
 
-      rules.forEach((rule: any) => {
-        const ruleKey = rule[0];
-        const ruleValue = parseValue(rule[1]);
-        const key = rule[0];
-        const keyValue = key.split('.')[0];
-
-        [
-          'lt',
-          'lte',
-          'gt',
-          'gte',
-          'equals',
-          'not',
-          'contains',
-          'startsWith',
-          'endsWith',
-          'every',
-          'some',
-          'none',
-          'in',
-          'has',
-          'hasEvery',
-          'hasSome',
-        ].forEach((val) => {
-          if (
-            rule[1].startsWith(`${val} `) &&
-            typeof ruleValue === 'string' &&
-            !ruleKey.includes('.')
-          ) {
-            const data: Record<string, any> = {};
-
-            data[val] = parseValue(ruleValue.replace(`${val} `, ''));
-
-            items[ruleKey] = data;
-          }
-
-          if (
-            typeof ruleValue === 'string' &&
-            ruleKey.includes('.') &&
-            rule[1].startsWith(`${val} `)
-          ) {
-            const data: Record<string, any> = {};
-
-            data[val] = parseValue(ruleValue.replace(`${val} `, ''));
-
-            items[keyValue] = { is: { [ruleKey.split('.')[1]]: data } };
-          }
-        });
-
-        if (
-          ruleValue != null &&
-          ruleValue !== '' &&
-          !ruleKey.includes('.')
-        ) {
-          items[ruleKey] = items[ruleKey] || ruleValue;
-        }
-      });
-
-      return items;
+      return this.buildCondition(rules);
     } catch (error) {
       console.error('Error parsing query string:', error);
       throw new BadRequestException('Invalid query format');
     }
+  }
+
+  private buildCondition(rules: [string, string | undefined][]): any {
+    const condition: any = {};
+    const operations = this.getOperations();
+
+    rules.forEach(([ruleKey, ruleValueRaw]) => {
+      if (!ruleValueRaw) return;
+
+      const ruleValue = parseValue(ruleValueRaw);
+      const key = ruleKey.toUpperCase();
+
+      if (key === 'OR' || key === 'AND') {
+        const subConditions = ruleValueRaw
+          .slice(1, -1)
+          .split(',')
+          .map((cond) => parseObjectLiteral(cond.trim()))
+          .map((subRules) => this.buildCondition(subRules));
+
+        condition[key] = subConditions;
+      } else if (key === 'NOT') {
+        const subRules = parseObjectLiteral(ruleValueRaw.trim());
+
+        condition[key] = this.buildCondition(subRules);
+      } else {
+        let operation;
+
+        for (const op of operations) {
+          if (ruleValueRaw.startsWith(`${op} `)) {
+            operation = op;
+
+            break;
+          }
+        }
+
+        if (operation) {
+          const parsedValue = parseValue(
+            ruleValueRaw.replace(`${operation} `, ''),
+          );
+
+          if (ruleKey.includes('.')) {
+            const keys = ruleKey.split('.');
+            const parentKey = keys[0];
+            const subKey = keys.slice(1).join('.');
+
+            condition[parentKey] = condition[parentKey] || { is: {} };
+            condition[parentKey].is[subKey] = {
+              [operation]: parsedValue,
+            };
+          } else {
+            condition[ruleKey] = {
+              [operation]: parsedValue,
+            };
+          }
+        } else {
+          condition[ruleKey] = ruleValue;
+        }
+      }
+    });
+
+    return condition;
+  }
+
+  private getOperations(): string[] {
+    return [
+      'lt',
+      'lte',
+      'gt',
+      'gte',
+      'equals',
+      'not',
+      'contains',
+      'startsWith',
+      'endsWith',
+      'every',
+      'some',
+      'none',
+      'in',
+      'has',
+      'hasEvery',
+      'hasSome',
+    ];
   }
 }
