@@ -59,6 +59,8 @@ https://example.com/?sortBy=firstName:asc
 
 **none** - `where=firstName: none string(John)` or `where=firstName: none John`
 
+**OR** - `where=OR:[ firstName: contains Jhon, lastName: contains Doe]`
+
 ## Where types realized:
 
 **string** - `where=firstName: contains string(John)`
@@ -101,6 +103,16 @@ https://example.com/?where=id: not int(12)
 * Select all rows where id is greater than 1 and email contains `@gmail.com`
 ```
 https://example.com/?where=id: gt int(1), email: contains @gmail.com
+```
+
+* Select all rows where ids are 1, 2 or 3 or age is 18
+```
+https://example.com/?where=OR:[id: in array(1,2,3), age: int(18)]
+```
+
+* Select all rows where the user's email contains `@gmail.com`.
+```
+https://example.com/?where=user.email: contains @gmail.com
 ```
 
 # WherePipe vs OrderByPipe
