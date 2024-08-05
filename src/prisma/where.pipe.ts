@@ -183,6 +183,10 @@ export default class WherePipe implements PipeTransform {
     }
   }
 
+  private isEmpty(element: string): boolean {
+    return element === '' || element === undefined || element === null;
+  }
+
   private buildCondition(rules: [string, string | undefined][]): any {
     const condition: {
       [key: string]: any;
@@ -216,7 +220,31 @@ export default class WherePipe implements PipeTransform {
       if (key === 'AND' || key === 'OR' || key === 'NOT') {
         let subConditions;
 
-        if (ruleValueRaw.startsWith('[') && ruleValueRaw.endsWith(']')) {
+        if (ruleValueRaw?.includes('array(')) {
+          let chainWithoutbrackets = ruleValueRaw.slice(1, -1);
+          let result: [string, string | undefined][] = [];
+          let regexArray = /(\w+):(in|has|hasEvery|hasSome) array\(([\w\.,\s()]+)\)/g;
+
+          let match;
+
+          while ((match = regexArray.exec(chainWithoutbrackets)) !== null) {
+            result.push([match[1], `${match[2]} array(${match[3]})`]);
+
+            chainWithoutbrackets = chainWithoutbrackets.replace(match[0], '');
+          }
+
+          let pairsRestants = chainWithoutbrackets.split(',');
+
+          pairsRestants.forEach((par) => {
+            let [key, value] = par.trim().split(':');
+
+            result.push([key, value]);
+          });
+
+          result = result.filter((subArray) => !subArray.some((subElement: any) => this.isEmpty(subElement)));
+
+          subConditions = result.map((subRules) => this.buildCondition([subRules as any]));
+        } else if (ruleValueRaw.startsWith('[') && ruleValueRaw.endsWith(']')) {
           subConditions = ruleValueRaw
             .slice(1, -1)
             .split(',')
@@ -291,7 +319,6 @@ export default class WherePipe implements PipeTransform {
           }
 
           const lastKey = keys[keys.length - 1];
-
           currentLevel[lastKey] = ruleValue;
         }
       }
