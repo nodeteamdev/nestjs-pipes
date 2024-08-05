@@ -170,52 +170,152 @@ const parseValue = (ruleValue: string): string | number | boolean | object => {
  * */
 @Injectable()
 export default class WherePipe implements PipeTransform {
-  transform(value: string): Pipes.Where | undefined {
+  transform(value: string) {
     if (value == null) return undefined;
+
     try {
-      const rules = parseObjectLiteral(value);
-      const items: Record<string, any> = {};
+      const rules = parseObjectLiteral(decodeURIComponent(value) || value);
 
-      rules.forEach((rule: any) => {
-        const ruleKey = rule[0];
-        const ruleValue = parseValue(rule[1]);
-
-        [
-          'lt',
-          'lte',
-          'gt',
-          'gte',
-          'equals',
-          'not',
-          'contains',
-          'startsWith',
-          'endsWith',
-          'every',
-          'some',
-          'none',
-          'in',
-          'has',
-          'hasEvery',
-          'hasSome',
-        ].forEach((val) => {
-          if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
-            const data: Record<string, any> = {};
-
-            data[val] = parseValue(ruleValue.replace(`${val} `, ''));
-
-            items[ruleKey] = data;
-          }
-        });
-
-        if (ruleValue != null && ruleValue !== '') {
-          items[ruleKey] = items[ruleKey] || ruleValue;
-        }
-      });
-
-      return items;
+      return this.buildCondition(rules);
     } catch (error) {
       console.error('Error parsing query string:', error);
       throw new BadRequestException('Invalid query format');
     }
+  }
+  private buildCondition(rules: [string, string | undefined][]): any {
+    const condition: {
+      [key: string]: any;
+    } = {};
+    const operations = [
+      'lt',
+      'lte',
+      'gt',
+      'gte',
+      'equals',
+      'not',
+      'contains',
+      'contains-insensitive',
+      'startsWith',
+      'endsWith',
+      'every',
+      'some',
+      'none',
+      'in',
+      'has',
+      'hasEvery',
+      'hasSome',
+    ];
+
+    rules.forEach(([ruleKey, ruleValueRaw]) => {
+      if (!ruleValueRaw) return;
+
+      const ruleValue = parseValue(ruleValueRaw);
+      const key = ruleKey.toUpperCase();
+      if (key === 'AND' || key === 'OR') {
+        let subConditions
+
+        if (ruleValueRaw?.includes('array(')) {
+          let chainWithoutbrackets = ruleValueRaw.slice(1, -1);
+          let result = [];
+          let regexArray = /(\w+):(in|has|hasEvery|hasSome) array\(([\w\.,\s()]+)\)/g;
+
+          let match;
+          while ((match = regexArray.exec(chainWithoutbrackets)) !== null) {
+            result.push([match[1], `${match[2]} array(${match[3]})`]);
+            chainWithoutbrackets = chainWithoutbrackets.replace(match[0], '');
+          }
+          let pairsRestants = chainWithoutbrackets.split(',');
+          pairsRestants.forEach((par) => {
+            let [key, value] = par.trim().split(':');
+            result.push([key, value]);
+          });
+          function isEmpty(element: string) {
+            return (
+              element === '' || element === undefined || element === null
+            );
+          }
+          for (let i = 0; i < result.length;) {
+            let subArray = result[i];
+            let hasEmptyElement = subArray.some((subElement) =>
+              isEmpty(subElement),
+            );
+            if (hasEmptyElement) {
+              result.splice(i, 1);
+            } else {
+              i++;
+            }
+          }
+
+          subConditions = result.map((subRules) => {
+            return this.buildCondition([subRules as any]);
+          });
+
+        } else {
+          subConditions = ruleValueRaw
+            .slice(1, -1)
+            .split(',')
+            .map((cond) => parseObjectLiteral(cond.trim()))
+            .map((subRules) => this.buildCondition(subRules));
+        }
+
+        condition[key] = subConditions;
+      } else {
+        let operation;
+
+        for (const op of operations) {
+          if (ruleValueRaw.startsWith(`${op} `)) {
+            operation = op;
+            break;
+          }
+        }
+
+        if (operation) {
+          const parsedValue = parseValue(
+            ruleValueRaw.replace(`${operation} `, ''),
+          );
+
+          const keys = ruleKey.split('.');
+          let currentLevel = condition;
+
+          for (let i = 0; i < keys.length; i++) {
+            const currentKey = keys[i];
+
+            if (i > 0) {
+              currentLevel['is'] = currentLevel['is'] || {};
+              currentLevel = currentLevel['is'];
+            }
+
+            if (i !== keys.length - 1) {
+              currentLevel[currentKey] = currentLevel[currentKey] || {};
+              currentLevel = currentLevel[currentKey];
+            }
+          }
+
+          const lastKey = keys[keys.length - 1];
+          currentLevel[lastKey] = currentLevel[lastKey] || {};
+          currentLevel[lastKey][operation] = parsedValue;
+
+        } else {
+          const keys = ruleKey.split('.');
+          let currentLevel = condition;
+          for (let i = 0; i < keys.length; i++) {
+            const currentKey = keys[i];
+            if (i > 0) {
+              currentLevel['is'] = currentLevel['is'] || {};
+              currentLevel = currentLevel['is'];
+            }
+
+            if (i !== keys.length - 1) {
+              currentLevel[currentKey] = currentLevel?.[currentKey] || {};
+              currentLevel = currentLevel[currentKey];
+            }
+          }
+
+          const lastKey = keys[keys.length - 1];
+          currentLevel[lastKey] = ruleValue;
+        }
+      }
+    });
+    return condition;
   }
 }

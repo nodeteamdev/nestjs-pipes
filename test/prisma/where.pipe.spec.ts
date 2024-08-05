@@ -102,6 +102,59 @@ describe('WherePipe', () => {
     });
   });
 
+  it('should parse "." from string "product.details.color.hexadecimal: contains string(#FFFF)"', () => {
+    const string = 'product.details.color.hexadecimal: contains string(#FFFF)';
+
+    expect(pipe.transform(string)).toEqual({
+      product: {
+        is: {
+          details: {
+            is: {
+              color: {
+                is: {
+                  hexadecimal: {
+                    contains: "#FFFF"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+    });
+  });
+
+  it('should parse "OR" from string "OR:[ firstName: contains Jhon, lastName: contains Doe]"', () => {
+    const string = "OR:[ firstName: contains Jhon, lastName: contains Doe]";
+
+    expect(pipe.transform(string)).toEqual({
+      OR: [
+        { firstName: { contains: "Jhon" } },
+        { lastName: { contains: "Doe" } },
+      ],
+    });
+  });
+
+  it('should parse "OR" with array values from string "OR:[id:in array(int(1),int(2),int(3)), user: contains Jhon]"', () => {
+    const string =
+      "OR:[id:in array(int(1),int(2),int(3)), user: contains Jhon]";
+
+    expect(pipe.transform(string)).toEqual({
+      OR: [
+        {
+          id: {
+            in: [1, 2, 3]
+          }
+        },
+        {
+          user: {
+            contains: "Jhon"
+          }
+        }
+      ],
+    });
+  });
+
   it('should be defined', () => {
     expect(pipe).toBeDefined();
   });
