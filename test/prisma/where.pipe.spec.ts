@@ -180,6 +180,26 @@ describe('WherePipe', () => {
     });
   });
 
+  it('should parse "AND and NOT" with "AND: [email: contains test@gmail.com], NOT: isVerified: equals boolean(false)"', () => {
+    const string =
+      "AND: [email: contains test@gmail.com], NOT: isVerified: equals boolean(false)";
+
+    expect(pipe.transform(string)).toEqual({
+      AND: [
+        {
+          email: {
+            contains: "test@gmail.com"
+          }
+        }
+      ],
+      NOT: {
+        isVerified: {
+          equals: false
+        }
+      }
+    });
+  });
+
   it('should be defined', () => {
     expect(pipe).toBeDefined();
   });
