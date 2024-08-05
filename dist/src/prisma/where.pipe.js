@@ -120,42 +120,131 @@ let WherePipe = class WherePipe {
         if (value == null)
             return undefined;
         try {
-            const rules = (0, parse_object_literal_1.default)(value);
-            const items = {};
-            rules.forEach((rule) => {
-                const ruleKey = rule[0];
-                const ruleValue = parseValue(rule[1]);
-                [
-                    'lt',
-                    'lte',
-                    'gt',
-                    'gte',
-                    'equals',
-                    'not',
-                    'contains',
-                    'startsWith',
-                    'endsWith',
-                    'every',
-                    'some',
-                    'none',
-                    'in'
-                ].forEach((val) => {
-                    if (rule[1].startsWith(`${val} `) && typeof ruleValue === 'string') {
-                        const data = {};
-                        data[val] = parseValue(ruleValue.replace(`${val} `, ''));
-                        items[ruleKey] = data;
-                    }
-                });
-                if (ruleValue != null && ruleValue !== '') {
-                    items[ruleKey] = items[ruleKey] || ruleValue;
-                }
-            });
-            return items;
+            const rules = (0, parse_object_literal_1.default)(decodeURIComponent(value) || value);
+            return this.buildCondition(rules);
         }
         catch (error) {
             console.error('Error parsing query string:', error);
             throw new common_1.BadRequestException('Invalid query format');
         }
+    }
+    isEmpty(element) {
+        return element === '' || element === undefined || element === null;
+    }
+    buildCondition(rules) {
+        const condition = {};
+        const operations = [
+            'lt',
+            'lte',
+            'gt',
+            'gte',
+            'equals',
+            'not',
+            'contains',
+            'contains-insensitive',
+            'startsWith',
+            'endsWith',
+            'every',
+            'some',
+            'none',
+            'in',
+            'has',
+            'hasEvery',
+            'hasSome',
+        ];
+        rules.forEach(([ruleKey, ruleValueRaw]) => {
+            if (!ruleValueRaw)
+                return;
+            const ruleValue = parseValue(ruleValueRaw);
+            const key = ruleKey.toUpperCase();
+            if (key === 'AND' || key === 'OR' || key === 'NOT') {
+                let subConditions;
+                if (ruleValueRaw?.includes('array(')) {
+                    let chainWithoutbrackets = ruleValueRaw.slice(1, -1);
+                    let result = [];
+                    let regexArray = /(\w+):(in|has|hasEvery|hasSome) array\(([\w\.,\s()]+)\)/g;
+                    let match;
+                    while ((match = regexArray.exec(chainWithoutbrackets)) !== null) {
+                        result.push([match[1], `${match[2]} array(${match[3]})`]);
+                        chainWithoutbrackets = chainWithoutbrackets.replace(match[0], '');
+                    }
+                    let pairsRestants = chainWithoutbrackets.split(',');
+                    pairsRestants.forEach((par) => {
+                        let [key, value] = par.trim().split(':');
+                        result.push([key, value]);
+                    });
+                    result = result.filter((subArray) => !subArray.some((subElement) => this.isEmpty(subElement)));
+                    subConditions = result.map((subRules) => this.buildCondition([subRules]));
+                }
+                else if (ruleValueRaw.startsWith('[') && ruleValueRaw.endsWith(']')) {
+                    subConditions = ruleValueRaw
+                        .slice(1, -1)
+                        .split(',')
+                        .map((cond) => (0, parse_object_literal_1.default)(cond.trim()))
+                        .map((subRules) => this.buildCondition(subRules));
+                }
+                else {
+                    const [subKey, subValue] = ruleValueRaw.split(':');
+                    const parsedSubRules = [
+                        [subKey.trim(), subValue.trim()],
+                    ];
+                    subConditions = [this.buildCondition(parsedSubRules)];
+                }
+                if (key === 'NOT') {
+                    condition[key] =
+                        subConditions.length === 1 ? subConditions[0] : subConditions;
+                }
+                else {
+                    condition[key] = subConditions;
+                }
+            }
+            else {
+                let operation;
+                for (const op of operations) {
+                    if (ruleValueRaw.startsWith(`${op} `)) {
+                        operation = op;
+                        break;
+                    }
+                }
+                if (operation) {
+                    const parsedValue = parseValue(ruleValueRaw.replace(`${operation} `, ''));
+                    const keys = ruleKey.split('.');
+                    let currentLevel = condition;
+                    for (let i = 0; i < keys.length; i++) {
+                        const currentKey = keys[i];
+                        if (i > 0) {
+                            currentLevel['is'] = currentLevel['is'] || {};
+                            currentLevel = currentLevel['is'];
+                        }
+                        if (i !== keys.length - 1) {
+                            currentLevel[currentKey] = currentLevel[currentKey] || {};
+                            currentLevel = currentLevel[currentKey];
+                        }
+                    }
+                    const lastKey = keys[keys.length - 1];
+                    currentLevel[lastKey] = currentLevel[lastKey] || {};
+                    currentLevel[lastKey][operation] = parsedValue;
+                }
+                else {
+                    const keys = ruleKey.split('.');
+                    let currentLevel = condition;
+                    for (let i = 0; i < keys.length; i++) {
+                        const currentKey = keys[i];
+                        if (i > 0) {
+                            currentLevel['is'] = currentLevel['is'] || {};
+                            currentLevel = currentLevel['is'];
+                        }
+                        if (i !== keys.length - 1) {
+                            currentLevel[currentKey] = currentLevel?.[currentKey] || {};
+                            currentLevel = currentLevel[currentKey];
+                        }
+                    }
+                    const lastKey = keys[keys.length - 1];
+                    currentLevel[lastKey] = ruleValue;
+                }
+            }
+        });
+        return condition;
     }
 };
 WherePipe = __decorate([
