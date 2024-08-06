@@ -26,6 +26,18 @@ import { Pipes } from '@nodeteam/nestjs-pipes/index';
 https://example.com/?sortBy=firstName:asc
 ```
 
+Test case:
+```typescript
+  it('should convert value like "name:asc, address:desc" to { name: "asc", address: "desc" }', () => {
+    const value = 'name:asc, address:desc';
+    const result = pipe.transform(value);
+    expect(result).toEqual({
+      address: 'desc',
+      name: 'asc',
+    });
+  });
+```
+
 
 # #WherePipe
 
@@ -134,6 +146,28 @@ https://example.com/?where=OR:[ email: contains super-admin@gmail.com, isVerifie
 https://example.com/?where=firstName:John&sortBy=firstName:asc
 ```
 
+Test case:
+```typescript
+  it('should parse "OR" with array values from string "OR:[id:in array(int(1),int(2),int(3)), user: contains Jhon]"', () => {
+    const string =
+      "OR:[id:in array(int(1),int(2),int(3)), user: contains Jhon]";
+
+    expect(pipe.transform(string)).toEqual({
+      OR: [
+        {
+          id: {
+            in: [1, 2, 3]
+          }
+        },
+        {
+          user: {
+            contains: "Jhon"
+          }
+        }
+      ],
+    });
+  });
+```
 # #SelectPipe
 
 ```typescript
@@ -151,4 +185,16 @@ https://example.com/?select=firstName,lastName
 
 ```
 https://example.com/?select=-firstName,-lastName
+```
+Test case:
+```typescript
+  it('should transform string user like { user:true }', () => {
+    const value = 'user';
+
+    const result = pipe.transform(value);
+
+    expect(result).toEqual({
+      user: true,
+    });
+  });
 ```
