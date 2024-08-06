@@ -170,7 +170,7 @@ const parseValue = (ruleValue: string): string | number | boolean | object => {
  * */
 @Injectable()
 export default class WherePipe implements PipeTransform {
-  transform(value: string) {
+  transform(value: string): Pipes.Where | undefined {
     if (value == null) return undefined;
 
     try {
