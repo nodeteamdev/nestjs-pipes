@@ -55,6 +55,123 @@ describe('WherePipe', () => {
             },
         });
     });
+    it('should parse "has" from string "tags: has yellow"', () => {
+        const string = 'tags: has yellow';
+        expect(pipe.transform(string)).toEqual({
+            tags: {
+                has: "yellow",
+            },
+        });
+    });
+    it('should parse "hasEvery" from string "tags: hasEvery array(yellow, green)"', () => {
+        const string = 'tags: hasEvery array(yellow, green)';
+        expect(pipe.transform(string)).toEqual({
+            tags: {
+                hasEvery: ["yellow", "green"],
+            },
+        });
+    });
+    it('should parse "hasEvery" from string "numbers: hasEvery array(int(5), int(8))"', () => {
+        const string = 'numbers: hasEvery array(int(5), int(8))';
+        expect(pipe.transform(string)).toEqual({
+            numbers: {
+                hasEvery: [5, 8],
+            },
+        });
+    });
+    it('should parse "hasSome" from string "tags: hasSome array(yellow, green)"', () => {
+        const string = 'tags: hasSome array(yellow, green)';
+        expect(pipe.transform(string)).toEqual({
+            tags: {
+                hasSome: ["yellow", "green"],
+            },
+        });
+    });
+    it('should parse "." from string "product.details.color.hexadecimal: contains string(#FFFF)"', () => {
+        const string = 'product.details.color.hexadecimal: contains string(#FFFF)';
+        expect(pipe.transform(string)).toEqual({
+            product: {
+                is: {
+                    details: {
+                        is: {
+                            color: {
+                                is: {
+                                    hexadecimal: {
+                                        contains: "#FFFF"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        });
+    });
+    it('should parse "OR" from string "OR:[ firstName: contains Jhon, lastName: contains Doe]"', () => {
+        const string = "OR:[ firstName: contains Jhon, lastName: contains Doe]";
+        expect(pipe.transform(string)).toEqual({
+            OR: [
+                { firstName: { contains: "Jhon" } },
+                { lastName: { contains: "Doe" } },
+            ],
+        });
+    });
+    it('should parse "OR" with array values from string "OR:[id:in array(int(1),int(2),int(3)), user: contains Jhon]"', () => {
+        const string = "OR:[id:in array(int(1),int(2),int(3)), user: contains Jhon]";
+        expect(pipe.transform(string)).toEqual({
+            OR: [
+                {
+                    id: {
+                        in: [1, 2, 3]
+                    }
+                },
+                {
+                    user: {
+                        contains: "Jhon"
+                    }
+                }
+            ],
+        });
+    });
+    it('should parse "OR and NOT" with "OR:[ email: contains super-admin@gmail.com, isVerified: equals boolean(true) ],  NOT: email: contains test@gmail.com"', () => {
+        const string = "OR:[ email: contains super-admin@gmail.com, isVerified: equals boolean(true) ],  NOT: email: contains test@gmail.com";
+        expect(pipe.transform(string)).toEqual({
+            OR: [
+                {
+                    email: {
+                        contains: "super-admin@gmail.com"
+                    }
+                },
+                {
+                    isVerified: {
+                        equals: true
+                    }
+                }
+            ],
+            NOT: {
+                email: {
+                    contains: "test@gmail.com"
+                }
+            }
+        });
+    });
+    it('should parse "AND and NOT" with "AND: [email: contains test@gmail.com], NOT: isVerified: equals boolean(false)"', () => {
+        const string = "AND: [email: contains test@gmail.com], NOT: isVerified: equals boolean(false)";
+        expect(pipe.transform(string)).toEqual({
+            AND: [
+                {
+                    email: {
+                        contains: "test@gmail.com"
+                    }
+                }
+            ],
+            NOT: {
+                isVerified: {
+                    equals: false
+                }
+            }
+        });
+    });
     it('should be defined', () => {
         expect(pipe).toBeDefined();
     });

@@ -155,6 +155,51 @@ describe('WherePipe', () => {
     });
   });
 
+  it('should parse "OR and NOT" with "OR:[ email: contains super-admin@gmail.com, isVerified: equals boolean(true) ],  NOT: email: contains test@gmail.com"', () => {
+    const string =
+      "OR:[ email: contains super-admin@gmail.com, isVerified: equals boolean(true) ],  NOT: email: contains test@gmail.com";
+
+    expect(pipe.transform(string)).toEqual({
+      OR: [
+        {
+          email: {
+            contains: "super-admin@gmail.com"
+          }
+        },
+        {
+          isVerified: {
+            equals: true
+          }
+        }
+      ],
+      NOT: {
+        email: {
+          contains: "test@gmail.com"
+        }
+      }
+    });
+  });
+
+  it('should parse "AND and NOT" with "AND: [email: contains test@gmail.com], NOT: isVerified: equals boolean(false)"', () => {
+    const string =
+      "AND: [email: contains test@gmail.com], NOT: isVerified: equals boolean(false)";
+
+    expect(pipe.transform(string)).toEqual({
+      AND: [
+        {
+          email: {
+            contains: "test@gmail.com"
+          }
+        }
+      ],
+      NOT: {
+        isVerified: {
+          equals: false
+        }
+      }
+    });
+  });
+
   it('should be defined', () => {
     expect(pipe).toBeDefined();
   });
