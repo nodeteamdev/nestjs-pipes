@@ -115,6 +115,16 @@ https://example.com/?where=OR:[id: in array(1,2,3), age: int(18)]
 https://example.com/?where=user.email: contains @gmail.com
 ```
 
+* Select all users whose firstName contains `Admin` but exclude users whose roles are `CUSTOMER`.
+```
+https://example.com/?where=profile.firstName: contains Admin, NOT: roles: hasSome CUSTOMER
+```
+
+* Select user who has the email `super-admin@gmail.com` or `verified` users but exclude user whose email contains `test@gmail.com`.
+```
+https://example.com/?where=OR:[ email: contains super-admin@gmail.com, isVerified: equals boolean(true) ],  NOT: email: contains sendgridupboost@gmail.com
+```
+
 # WherePipe vs OrderByPipe
 
 ### Examples:
